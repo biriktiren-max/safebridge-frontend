@@ -8,6 +8,7 @@ const CONTRACT_ABI = ["function getTransferHistory() view returns (tuple(uint256
 export default function Home() {
   const [account, setAccount] = useState("");
   const [transactions, setTransactions] = useState([]);
+  const [selectedToken, setSelectedToken] = useState("USDT");
 
   const connectAndFetch = async () => {
     if (!window.ethereum) return alert("MetaMask yüklü değil!");
@@ -38,20 +39,36 @@ export default function Home() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Transfer Paneli */}
+        {/* Transfer Paneli - GÜNCELLENDİ (Seçim Menüsü Takıldı) */}
         <div className="bg-gray-800 p-6 rounded-xl border border-blue-500/30 shadow-md">
           <h2 className="text-xl font-bold mb-4">🚀 Yeni Transfer</h2>
-          <input type="text" placeholder="Token Kontratı" className="w-full bg-gray-900 p-3 mb-3 rounded border border-gray-700 outline-none focus:border-blue-500" />
-          <input type="text" placeholder="Alıcı Adresi" className="w-full bg-gray-900 p-3 mb-3 rounded border border-gray-700 outline-none focus:border-blue-500" />
-          <input type="number" placeholder="Miktar" className="w-full bg-gray-900 p-3 mb-4 rounded border border-gray-700 outline-none focus:border-blue-500" />
-          <button className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded font-bold transition-all shadow-lg">Gönder</button>
+          
+          <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Gönderilecek Varlık</label>
+          <select 
+            value={selectedToken}
+            onChange={(e) => setSelectedToken(e.target.value)}
+            className="w-full bg-gray-900 p-3.5 mb-3 rounded border border-gray-700 font-semibold text-blue-300 outline-none focus:border-blue-500 transition-all"
+          >
+            <option value="USDT">💵 USDT (Tether Dolar)</option>
+            <option value="XAUT">🥇 XAUT (Tether Altın)</option>
+          </select>
+
+          <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Alıcı Adresi</label>
+          <input type="text" placeholder="0x..." className="w-full bg-gray-900 p-3 mb-3 rounded border border-gray-700 font-mono text-sm outline-none focus:border-blue-500" />
+          
+          <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Miktar</label>
+          <input type="number" placeholder="0.00" className="w-full bg-gray-900 p-3 mb-4 rounded border border-gray-700 outline-none focus:border-blue-500" />
+          
+          <button className="w-full bg-blue-600 hover:bg-blue-700 py-3.5 rounded font-bold transition-all shadow-lg text-white">
+            Güvenli Gönderimi Başlat ({selectedToken})
+          </button>
         </div>
 
         {/* Geçmiş Paneli */}
         <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-md">
           <h2 className="text-xl font-bold mb-4">📜 İşlem Geçmişi</h2>
           {!account ? (
-            <button onClick={connectAndFetch} className="bg-green-600 hover:bg-green-700 px-4 py-3 rounded w-full font-bold transition-all shadow-lg">
+            <button onClick={connectAndFetch} className="bg-green-600 hover:bg-green-700 px-4 py-3 rounded w-full font-bold transition-all shadow-lg text-white">
               Cüzdanı Bağla ve Listeyi Çek
             </button>
           ) : (
