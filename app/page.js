@@ -30,8 +30,9 @@ export default function HomePage() {
   const [escrowAmount, setEscrowAmount] = useState("");
   const [escrowToken, setEscrowToken] = useState("USDT");
   const [escrowDesc, setEscrowDesc] = useState("");
+  const [escrowPassword, setEscrowPassword] = useState(""); // 🔒 Parola Sensörü Aktif
   const [activeEscrows, setActiveEscrows] = useState([
-    { id: 101, seller: "0x71C...89A1", amount: "250 USDT", desc: "Web Tasarım Hizmeti", state: "🔒 Kasada Kilitli" }
+    { id: 101, seller: "0x71C...89A1", amount: "250 USDT", desc: "Web Tasarım Hizmeti", password: "123", state: "🔒 Kasada Kilitli" }
   ]);
 
   // 🛡️ Ağ Kontrolü
@@ -100,6 +101,7 @@ export default function HomePage() {
     if (!escrowSeller || !ethers.isAddress(escrowSeller)) return alert("⛔ GÜVENLİK FRENİ: Satıcı cüzdan adresi geçersiz!");
     if (!escrowAmount || isNaN(Number(escrowAmount)) || Number(escrowAmount) <= 0) return alert("⚠️ Lütfen geçerli bir miktar girin!");
     if (!escrowDesc) return alert("⚠️ Lütfen ticaret açıklaması yazın!");
+    if (!escrowPassword) return alert("🔒 GÜVENLİK FRENİ: Lütfen bu işlem için bir kilit şifresi belirleyin!");
 
     try {
       setStatus(`⏳ [Escrow Kasa] ${escrowAmount} ${escrowToken} akıllı sözleşmeye kilitleniyor... MetaMask'tan onay verin.`);
@@ -110,17 +112,23 @@ export default function HomePage() {
           seller: escrowSeller.slice(0, 6) + "..." + escrowSeller.slice(-4),
           amount: `${escrowAmount} ${escrowToken}`,
           desc: escrowDesc,
+          password: escrowPassword,
           state: "🔒 Kasada Kilitli"
         }]);
-        setEscrowAmount(""); setEscrowSeller(""); setEscrowDesc("");
+        setEscrowAmount(""); setEscrowSeller(""); setEscrowDesc(""); setEscrowPassword("");
       }, 2000);
     } catch (err) { setStatus("❌ İşlem iptal edildi."); }
   };
 
   // 🟢 ESCROW PARASINI SERBEST BIRAK
-  const handleRelease = (id) => {
-    alert(`🎉 İşlem #${id} Onaylandı! Kilitli fon satıcının cüzdanına serbest bırakıldı.`);
-    setActiveEscrows(activeEscrows.filter(item => item.id !== id));
+  const handleRelease = (id, originalPassword) => {
+    const inputPass = prompt("🔒 Lütfen bu işlemin kilidini açmak için Güvenlik Şifresini girin:");
+    if (inputPass === originalPassword) {
+      alert(`🎉 Şifre Doğru! İşlem #${id} Onaylandı! Kilitli fon satıcının cüzdanına serbest bırakıldı.`);
+      setActiveEscrows(activeEscrows.filter(item => item.id !== id));
+    } else {
+      alert("❌ HATA: Yanlış şifre girdiniz! Güvenlik kilidi açılamadı.");
+    }
   };
 
   return (
@@ -200,7 +208,7 @@ export default function HomePage() {
         </button>
       </div>
 
-      {/* 🏁 ASIL ÇALIŞMA ALANI: BİLGİSAYARDA YAN YANA (2 Kolon), TELEFONDA TEK KOLON */}
+      {/* 🏁 ASIL ÇALIŞMA ALANI */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-6xl items-start">
         
         {/* 🚀 1. MOTOR: ANLIK GÜVENLİ TRANSFER KOKPİTİ */}
@@ -238,7 +246,7 @@ export default function HomePage() {
               onClick={handleTransfer}
               disabled={!account || isWrongNetwork}
               className={`w-full py-4 rounded-xl font-bold text-white shadow-lg transition-all mt-2 flex items-center justify-center gap-2 ${
-                !account ? "bg-gray-800 text-gray-500 cursor-not-allowed" : isWrongNetwork ? "bg-red-600 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 shadow-blue-600/30 active:scale-95 cursor-pointer"
+                !account ? "bg-gray-700 text-gray-500 cursor-not-allowed" : isWrongNetwork ? "bg-red-600 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 shadow-blue-600/30 active:scale-95 cursor-pointer"
               }`}
             >
               {!account ? "🔒 Önce Cüzdan Bağlayın" : "🚀 Güvenli Gönderimi Başlat"}
@@ -246,7 +254,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* 🤝 2. MOTOR: ESCROW GÜVENCELİ TİCARET KOKPİTİ */}
+        {/* 🤝 2. MOTOR: ESCROW GÜVENCELİ TİCARET KOKPİTİ (PAROLALI YENİ ŞASİ) */}
         <div className={`${activeTab === "escrow" ? "block" : "hidden"} lg:block bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-3xl shadow-xl hover:border-emerald-500/30 transition-all flex flex-col justify-between h-full`}>
           <div>
             <div className="flex items-center justify-between mb-6 border-b border-slate-800 pb-4">
@@ -254,7 +262,7 @@ export default function HomePage() {
                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
                   <span>🤝</span> Güvenli Ticaret (Escrow)
                 </h3>
-                <p className="text-xs text-gray-400 mt-0.5">Alıcı ve Satıcıyı Koruyan Akıllı Emanet Kasası</p>
+                <p className="text-xs text-gray-400 mt-0.5">Şifre Korumalı Akıllı Emanet Kasası</p>
               </div>
               <span className="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-2.5 py-1 rounded-full font-mono uppercase">Modül #2</span>
             </div>
@@ -284,11 +292,17 @@ export default function HomePage() {
                 <input type="text" placeholder="Örn: Araç Kapora Bedeli / Yazılım İş Ücreti" value={escrowDesc} onChange={(e) => setEscrowDesc(e.target.value)} className="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-gray-300 outline-none focus:border-emerald-500" />
               </div>
 
+              {/* 🔒 YENİ EKLENEN PAROLA GİRİŞ KUTUSU */}
+              <div>
+                <label className="block text-xs font-bold text-emerald-400 uppercase mb-1">🔒 GÜVENLİK PAROLASI (KİLİT ŞİFRESİ)</label>
+                <input type="password" placeholder="Kilidi açacak gizli şifre belirleyin" value={escrowPassword} onChange={(e) => setEscrowPassword(e.target.value)} className="w-full p-3.5 bg-slate-950 border border-emerald-900 rounded-xl text-sm text-white outline-none focus:border-emerald-500 placeholder-emerald-800" />
+              </div>
+
               <button
                 onClick={handleCreateEscrow}
                 disabled={!account || isWrongNetwork}
                 className={`w-full py-4 rounded-xl font-bold text-white shadow-lg transition-all mt-2 flex items-center justify-center gap-2 ${
-                  !account ? "bg-gray-800 text-gray-500 cursor-not-allowed" : isWrongNetwork ? "bg-red-600 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30 active:scale-95 cursor-pointer"
+                  !account ? "bg-gray-700 text-gray-500 cursor-not-allowed" : isWrongNetwork ? "bg-red-600 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30 active:scale-95 cursor-pointer"
                 }`}
               >
                 {!account ? "🔒 Önce Cüzdan Bağlayın" : "🤝 Kasaya Kilitle & Başlat"}
@@ -306,10 +320,10 @@ export default function HomePage() {
                 <div key={item.id} className="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                   <div>
                     <span className="font-bold text-white block">{item.desc}</span>
-                    <span className="text-[10px] text-gray-500 font-mono">{item.amount} • {item.seller}</span>
+                    <span className="text-[10px] text-gray-500 font-mono">{item.amount} • Satıcı: {item.seller}</span>
                   </div>
-                  <button onClick={() => handleRelease(item.id)} className="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 font-bold px-2.5 py-1 rounded-lg text-[11px] transition-all">
-                    ✅ Onayla
+                  <button onClick={() => handleRelease(item.id, item.password)} className="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 font-bold px-2.5 py-1 rounded-lg text-[11px] transition-all">
+                    🔑 Kilidi Aç
                   </button>
                 </div>
               ))}
@@ -322,7 +336,7 @@ export default function HomePage() {
 
       {/* Alt Bilgi */}
       <div className="mt-16 text-gray-600 text-xs font-mono text-center">
-        SafeBridge v2.5.0 • Akıllı Çift Motorlu Kokpit • Hoşdere Disipliniyle Üretildi 🛠️
+        SafeBridge v2.5.0 • Şifre Korumalı Çift Motor • Hoşdere Disipliniyle Üretildi 🛠️
       </div>
 
     </div>
