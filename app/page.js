@@ -23,14 +23,14 @@ export default function HomePage() {
   // 🚀 1. MOTOR (TRANSFER) DEĞİŞKENLERİ
   const [transferAddress, setTransferAddress] = useState("");
   const [transferAmount, setTransferAmount] = useState("");
-  const [transferToken, setTransferToken] = useState("USDT");
+  const [transferToken, setTransferToken] = useState("POL"); // Test için varsayılan POL yapıldı
 
   // 🤝 2. MOTOR (ESCROW TİCARET) DEĞİŞKENLERİ
   const [escrowSeller, setEscrowSeller] = useState("");
   const [escrowAmount, setEscrowAmount] = useState("");
-  const [escrowToken, setEscrowToken] = useState("USDT");
+  const [escrowToken, setEscrowToken] = useState("POL");
   const [escrowDesc, setEscrowDesc] = useState("");
-  const [escrowPassword, setEscrowPassword] = useState(""); // 🔒 Parola Sensörü Aktif
+  const [escrowPassword, setEscrowPassword] = useState(""); 
   const [activeEscrows, setActiveEscrows] = useState([
     { id: 101, seller: "0x71C...89A1", amount: "250 USDT", desc: "Web Tasarım Hizmeti", password: "123", state: "🔒 Kasada Kilitli" }
   ]);
@@ -78,7 +78,7 @@ export default function HomePage() {
     } catch (err) { setStatus("🔴 Cüzdan bağlantısı reddedildi."); }
   };
 
-  // 🚀 TRANSFER MOTORUNU ATEŞLE
+  // 🚀 GERÇEK METAMASK ATEŞLEME MOTORU (1. MODÜL)
   const handleTransfer = async () => {
     if (!account) return alert("🔒 Önce lütfen cüzdanınızı bağlayın!");
     if (isWrongNetwork) { switchNetwork(); return; }
@@ -86,15 +86,50 @@ export default function HomePage() {
     if (!transferAmount || isNaN(Number(transferAmount)) || Number(transferAmount) <= 0) return alert("⚠️ Lütfen geçerli bir miktar girin!");
 
     try {
-      setStatus(`⏳ [Transfer Motoru] ${transferAmount} ${transferToken} ağa gönderiliyor... MetaMask'tan onay verin.`);
-      setTimeout(() => {
-        setStatus(`✅ BAŞARILI! ${transferAmount} ${transferToken} transferi blokzincir üzerinde kesinleşti!`);
-        setTransferAmount(""); setTransferAddress("");
-      }, 2000);
-    } catch (err) { setStatus("❌ İşlem iptal edildi."); }
+      setStatus(`⏳ [Gerçek Sinyal] MetaMask açılıyor... Lütfen cüzdanınızdan ${transferAmount} ${transferToken} transferini onaylayın!`);
+      
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
+      if (transferToken === "POL") {
+        // 🟣 Doğrudan POL (Polygon Ana Coin) Transferi
+        const tx = await signer.sendTransaction({
+          to: transferAddress,
+          value: ethers.parseEther(transferAmount)
+        });
+        setStatus(`⏳ POL Transferi ağa iletildi! Blokzincir onayı bekleniyor... (TX: ${tx.hash.slice(0, 8)}...)`);
+        await tx.wait();
+      } else {
+        // 💵 USDT veya XAUT (ERC-20 Token) Transferi
+        const TOKEN_ADDRESS = transferToken === "USDT" 
+          ? "0xc2132D05D31c914a87C6611C10748AEb04B58e8F" // Polygon USDT Resmi Adresi
+          : "0x68749665FF8D2d112Fa859AA293F07A622782F38"; // XAUT Adresi
+        
+        const erc20Abi = ["function transfer(address to, uint256 value) public returns (bool)"];
+        const tokenContract = new ethers.Contract(TOKEN_ADDRESS, erc20Abi, signer);
+        
+        // USDT 6 desimaldir
+        const decimals = transferToken === "USDT" ? 6 : 18;
+        const amountInWei = ethers.parseUnits(transferAmount, decimals);
+        
+        const tx = await tokenContract.transfer(transferAddress, amountInWei);
+        setStatus(`⏳ ${transferToken} Transferi ağa iletildi! Onay bekleniyor... (TX: ${tx.hash.slice(0, 8)}...)`);
+        await tx.wait();
+      }
+
+      setStatus(`✅ BAŞARILI! ${transferAmount} ${transferToken} transferi Polygon blokzincirinde kesinleşti!`);
+      setTransferAmount(""); setTransferAddress("");
+    } catch (err) { 
+      console.error(err);
+      if (err.code === "ACTION_REJECTED" || err.code === 4001) {
+        setStatus("❌ İşlem iptal edildi: MetaMask onayı sizin tarafınızdan reddedildi.");
+      } else {
+        setStatus(`❌ HATA: Transfer gerçekleştirilemedi (Cüzdanda yetersiz bakiye veya ağ hatası).`);
+      }
+    }
   };
 
-  // 🤝 ESCROW MOTORUNU ATEŞLE
+  // 🤝 GERÇEK METAMASK ATEŞLEME MOTORU (2. MODÜL - ESCROW)
   const handleCreateEscrow = async () => {
     if (!account) return alert("🔒 Önce lütfen cüzdanınızı bağlayın!");
     if (isWrongNetwork) { switchNetwork(); return; }
@@ -104,20 +139,52 @@ export default function HomePage() {
     if (!escrowPassword) return alert("🔒 GÜVENLİK FRENİ: Lütfen bu işlem için bir kilit şifresi belirleyin!");
 
     try {
-      setStatus(`⏳ [Escrow Kasa] ${escrowAmount} ${escrowToken} akıllı sözleşmeye kilitleniyor... MetaMask'tan onay verin.`);
-      setTimeout(() => {
-        setStatus(`✅ BAŞARILI! ${escrowAmount} ${escrowToken} akıllı kasada kilitlendi.`);
-        setActiveEscrows([...activeEscrows, {
-          id: Math.floor(Math.random() * 900) + 100,
-          seller: escrowSeller.slice(0, 6) + "..." + escrowSeller.slice(-4),
-          amount: `${escrowAmount} ${escrowToken}`,
-          desc: escrowDesc,
-          password: escrowPassword,
-          state: "🔒 Kasada Kilitli"
-        }]);
-        setEscrowAmount(""); setEscrowSeller(""); setEscrowDesc(""); setEscrowPassword("");
-      }, 2000);
-    } catch (err) { setStatus("❌ İşlem iptal edildi."); }
+      setStatus(`⏳ [Escrow Kasa] MetaMask açılıyor... Lütfen ${escrowAmount} ${escrowToken} kilitme işlemini onaylayın!`);
+      
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
+      if (escrowToken === "POL") {
+        // Kasaya doğrudan POL kilitleme sinyali
+        const tx = await signer.sendTransaction({
+          to: CONTRACT_ADDRESS,
+          value: ethers.parseEther(escrowAmount)
+        });
+        setStatus(`⏳ Escrow kilitleme işlemi ağa iletildi! Onay bekleniyor...`);
+        await tx.wait();
+      } else {
+        // USDT kilitleme sinyali
+        const TOKEN_ADDRESS = escrowToken === "USDT" 
+          ? "0xc2132D05D31c914a87C6611C10748AEb04B58e8F" 
+          : "0x68749665FF8D2d112Fa859AA293F07A622782F38";
+        const erc20Abi = ["function transfer(address to, uint256 value) public returns (bool)"];
+        const tokenContract = new ethers.Contract(TOKEN_ADDRESS, erc20Abi, signer);
+        const decimals = escrowToken === "USDT" ? 6 : 18;
+        const amountInWei = ethers.parseUnits(escrowAmount, decimals);
+        
+        const tx = await tokenContract.transfer(CONTRACT_ADDRESS, amountInWei);
+        setStatus(`⏳ Escrow fonu akıllı kasaya iletildi! Onay bekleniyor...`);
+        await tx.wait();
+      }
+
+      setStatus(`✅ BAŞARILI! ${escrowAmount} ${escrowToken} akıllı kasada kilitlendi.`);
+      setActiveEscrows([...activeEscrows, {
+        id: Math.floor(Math.random() * 900) + 100,
+        seller: escrowSeller.slice(0, 6) + "..." + escrowSeller.slice(-4),
+        amount: `${escrowAmount} ${escrowToken}`,
+        desc: escrowDesc,
+        password: escrowPassword,
+        state: "🔒 Kasada Kilitli"
+      }]);
+      setEscrowAmount(""); setEscrowSeller(""); setEscrowDesc(""); setEscrowPassword("");
+    } catch (err) { 
+      console.error(err);
+      if (err.code === "ACTION_REJECTED" || err.code === 4001) {
+        setStatus("❌ İşlem iptal edildi: MetaMask onayı reddedildi.");
+      } else {
+        setStatus("❌ HATA: Escrow kasasına kilitleme başarısız oldu (Yetersiz bakiye).");
+      }
+    }
   };
 
   // 🟢 ESCROW PARASINI SERBEST BIRAK
@@ -173,7 +240,7 @@ export default function HomePage() {
                   <span className="bg-slate-800 text-gray-300 border border-slate-700 px-3 py-1.5 rounded-xl truncate max-w-[160px]">{account}</span>
                 </div>
               )}
-              <span className="text-[11px] text-green-400 font-semibold flex items-center justify-center lg:justify-end gap-1">🟢 Güvenlik Kalkanı ve Çift Motor Aktif</span>
+              <span className="text-[11px] text-green-400 font-semibold flex items-center justify-center lg:justify-end gap-1">🟢 Gerçek MetaMask Ateşleme Motoru Aktif</span>
             </div>
           )}
         </div>
@@ -227,6 +294,7 @@ export default function HomePage() {
             <div>
               <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Gönderilecek Varlık</label>
               <select value={transferToken} onChange={(e) => setTransferToken(e.target.value)} className="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl font-semibold text-white outline-none focus:border-blue-500">
+                <option value="POL">🟣 POL (Polygon Ana Coin)</option>
                 <option value="USDT">💵 USDT (Tether Dolar)</option>
                 <option value="XAUT">🥇 XAUT (Tether Altın)</option>
               </select>
@@ -254,7 +322,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* 🤝 2. MOTOR: ESCROW GÜVENCELİ TİCARET KOKPİTİ (PAROLALI YENİ ŞASİ) */}
+        {/* 🤝 2. MOTOR: ESCROW GÜVENCELİ TİCARET KOKPİTİ */}
         <div className={`${activeTab === "escrow" ? "block" : "hidden"} lg:block bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-3xl shadow-xl hover:border-emerald-500/30 transition-all flex flex-col justify-between h-full`}>
           <div>
             <div className="flex items-center justify-between mb-6 border-b border-slate-800 pb-4">
@@ -281,8 +349,8 @@ export default function HomePage() {
                 <div>
                   <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Varlık</label>
                   <select value={escrowToken} onChange={(e) => setEscrowToken(e.target.value)} className="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl font-semibold text-white outline-none focus:border-emerald-500">
+                    <option value="POL">🟣 POL</option>
                     <option value="USDT">💵 USDT</option>
-                    <option value="XAUT">🥇 XAUT</option>
                   </select>
                 </div>
               </div>
@@ -292,7 +360,6 @@ export default function HomePage() {
                 <input type="text" placeholder="Örn: Araç Kapora Bedeli / Yazılım İş Ücreti" value={escrowDesc} onChange={(e) => setEscrowDesc(e.target.value)} className="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-gray-300 outline-none focus:border-emerald-500" />
               </div>
 
-              {/* 🔒 YENİ EKLENEN PAROLA GİRİŞ KUTUSU */}
               <div>
                 <label className="block text-xs font-bold text-emerald-400 uppercase mb-1">🔒 GÜVENLİK PAROLASI (KİLİT ŞİFRESİ)</label>
                 <input type="password" placeholder="Kilidi açacak gizli şifre belirleyin" value={escrowPassword} onChange={(e) => setEscrowPassword(e.target.value)} className="w-full p-3.5 bg-slate-950 border border-emerald-900 rounded-xl text-sm text-white outline-none focus:border-emerald-500 placeholder-emerald-800" />
@@ -336,7 +403,7 @@ export default function HomePage() {
 
       {/* Alt Bilgi */}
       <div className="mt-16 text-gray-600 text-xs font-mono text-center">
-        SafeBridge v2.5.0 • Şifre Korumalı Çift Motor • Hoşdere Disipliniyle Üretildi 🛠️
+        SafeBridge v2.5.0 • Gerçek Web3 Motoru Aktif • Hoşdere Disipliniyle Üretildi 🛠️
       </div>
 
     </div>
