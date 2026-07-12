@@ -9,6 +9,10 @@ const TARGET_NETWORK_NAME = "Polygon Mainnet";
 // 💰 HAZİNE KASASI & ESCROW KONTRAT BİLGİLERİ
 const CONTRACT_ADDRESS = "0x9e88A41c8888b5D65A0D23055e810594D024f227";
 
+// 👑 YÖNETİCİ (OWNER) YEDEK KONTROL ADRESİ
+// Buraya kendi cüzdan adresini yapıştırabilirsin usta (Sistem öncelikle kontratın gerçek sahibine bakar):
+const FALLBACK_ADMIN_ADDRESS = "0x68E0c0000000000000000000000000000001588D";
+
 export default function HomePage() {
   // 📱 AKILLI SEKME (TAB) HAFIZASI
   const [activeTab, setActiveTab] = useState("transfer");
@@ -19,6 +23,9 @@ export default function HomePage() {
   const [vaultBalance, setVaultBalance] = useState("0.0000");
   const [status, setStatus] = useState("");
   const [isWrongNetwork, setIsWrongNetwork] = useState(false);
+
+  // 🔒 GÜVENLİK ZIRHI: Yönetici (Owner) Yetki Kilidi
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // 🚀 1. MOTOR (TRANSFER) DEĞİŞKENLERİ
   const [transferAddress, setTransferAddress] = useState("");
@@ -63,7 +70,7 @@ export default function HomePage() {
     } catch (err) { alert(`⚠️ Lütfen MetaMask üzerinden ${TARGET_NETWORK_NAME} ağını seçin.`); }
   };
 
-  // 🔒 Cüzdan Bağlama & Kasa Sensörlerini Okuma
+  // 🔒 Cüzdan Bağlama, Kasa Sensörü ve YÖNETİCİ YETKİ KONTROLÜ
   const connectWallet = async () => {
     if (!window.ethereum) return alert("⚠️ MetaMask bulunamadı! Lütfen tarayıcınıza ekleyin.");
     try {
@@ -75,9 +82,11 @@ export default function HomePage() {
       
       const isNetworkOk = await checkNetwork(provider);
       if (isNetworkOk) {
+        // Cüzdan Bakiyesini Oku
         const userBalance = await provider.getBalance(currentAccount);
         setBalance(ethers.formatEther(userBalance));
 
+        // Hazine Kasası Bakiyesini Oku
         try {
           const contractBal = await provider.getBalance(CONTRACT_ADDRESS);
           setVaultBalance(ethers.formatEther(contractBal));
@@ -85,7 +94,30 @@ export default function HomePage() {
           setVaultBalance("0.0000");
         }
 
-        setStatus("🟢 Cüzdan bağlandı. 3 Modüllü Akıllı Kokpit işlem yapmaya hazır!");
+        // 👑 YÖNETİCİ GÜVENLİK KİLİDİ (Bağlanan cüzdan akıllı sözleşmenin sahibi mi?)
+        try {
+          const ownerAbi = ["function owner() view returns (address)"];
+          const contract = new ethers.Contract(CONTRACT_ADDRESS, ownerAbi, provider);
+          const contractOwner = await contract.owner();
+          
+          if (currentAccount.toLowerCase() === contractOwner.toLowerCase() || currentAccount.toLowerCase() === FALLBACK_ADMIN_ADDRESS.toLowerCase()) {
+            setIsAdmin(true);
+            setStatus("👑 Yönetici (Owner) cüzdanı bağlandı! Özel yönetim paneli aktif edildi.");
+          } else {
+            setIsAdmin(false);
+            if (activeTab === "admin") setActiveTab("transfer");
+            setStatus("🟢 Müşteri cüzdanı bağlandı. Güvenli ticaret modülleri hazır!");
+          }
+        } catch (err) {
+          if (currentAccount.toLowerCase() === FALLBACK_ADMIN_ADDRESS.toLowerCase()) {
+            setIsAdmin(true);
+            setStatus("👑 Yönetici cüzdanı bağlandı!");
+          } else {
+            setIsAdmin(false);
+            if (activeTab === "admin") setActiveTab("transfer");
+            setStatus("🟢 Müşteri cüzdanı bağlandı.");
+          }
+        }
       }
     } catch (err) { setStatus("🔴 Cüzdan bağlantısı reddedildi."); }
   };
@@ -184,7 +216,7 @@ export default function HomePage() {
 
   // 🛠️ 3. MODÜL: YÖNETİCİ VANASI
   const handleUpdateFee = async () => {
-    if (!account) return alert("🔒 Önce yönetici cüzdanınızı bağlayın!");
+    if (!account || !isAdmin) return alert("🔒 Bu işlem için sadece yönetici cüzdanı yetkilidir!");
     if (!newFeeInput || isNaN(Number(newFeeInput))) return alert("⚠️ Lütfen geçerli bir BPS değeri girin!");
     if (Number(newFeeInput) > 300) return alert("⛔ GÜVENLİK FRENİ: Komisyon oranı en fazla %3.00 (300 BPS) yapılabilir!");
 
@@ -243,7 +275,9 @@ export default function HomePage() {
                   <span className="bg-slate-800 text-gray-300 border border-slate-700 px-3 py-1.5 rounded-xl truncate max-w-[160px]">{account}</span>
                 </div>
               )}
-              <span className="text-[11px] text-green-400 font-semibold flex items-center justify-center lg:justify-end gap-1">🟢 3 Modüllü Gerçek Web3 Motoru Aktif</span>
+              <span className="text-[11px] text-green-400 font-semibold flex items-center justify-center lg:justify-end gap-1">
+                {isAdmin ? "👑 Yönetici Kokpiti ve Vana Aktif" : "🟢 Müşteri Web3 Motoru Aktif"}
+              </span>
             </div>
           )}
         </div>
@@ -252,7 +286,7 @@ export default function HomePage() {
       {/* Durum Bilgilendirme Ekranı */}
       {status && (
         <div className={`w-full max-w-6xl mb-6 p-3 rounded-xl text-center text-xs font-semibold border ${
-          status.includes("❌") || status.includes("⛔") || status.includes("⚠️") ? "bg-red-950/50 text-red-300 border-red-800" : status.includes("🟢") || status.includes("✅") ? "bg-emerald-950/50 text-emerald-300 border-emerald-800" : "bg-blue-950/50 text-blue-300 border-blue-800"
+          status.includes("❌") || status.includes("⛔") || status.includes("⚠️") ? "bg-red-950/50 text-red-300 border-red-800" : status.includes("👑") ? "bg-purple-950/50 text-purple-300 border-purple-800" : status.includes("🟢") || status.includes("✅") ? "bg-emerald-950/50 text-emerald-300 border-emerald-800" : "bg-blue-950/50 text-blue-300 border-blue-800"
         }`}>
           {status}
         </div>
@@ -276,14 +310,18 @@ export default function HomePage() {
         >
           🤝 Escrow Ticaret
         </button>
-        <button
-          onClick={() => setActiveTab("admin")}
-          className={`flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 ${
-            activeTab === "admin" ? "bg-purple-600 text-white shadow-md" : "text-gray-400 hover:text-white"
-          }`}
-        >
-          🛠️ Yönetici Paneli
-        </button>
+        
+        {/* 👑 GÜVENLİK KİLİDİ: Bu sekme SADECE Yönetici (Sözleşme Sahibi) bağlandığında ekranda görünür! */}
+        {isAdmin && (
+          <button
+            onClick={() => setActiveTab("admin")}
+            className={`flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 animate-fade-in ${
+              activeTab === "admin" ? "bg-purple-600 text-white shadow-md" : "text-gray-400 hover:text-white"
+            }`}
+          >
+            🛠️ Yönetici Paneli
+          </button>
+        )}
       </div>
 
       {/* 🏁 ASIL ÇALIŞMA ALANI */}
@@ -381,65 +419,67 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* 🛠️ 3. MOTOR: YÖNETİCİ KOKPİTİ */}
-        <div className={`${activeTab === "admin" ? "block" : "hidden"} bg-slate-900 border border-purple-900/50 p-6 sm:p-8 rounded-3xl shadow-2xl relative overflow-hidden`}>
-          <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl pointer-events-none"></div>
-          <div className="flex items-center justify-between mb-6 border-b border-slate-800 pb-4">
-            <div>
-              <h3 className="text-xl font-bold text-white flex items-center gap-2"><span>🛠️</span> Yönetici Paneli & Ayar Vanası</h3>
-              <p className="text-xs text-purple-300 mt-0.5">Sözleşme Sahibi (Owner) Özel Kontrol Paneli</p>
-            </div>
-            <span className="text-[10px] bg-purple-950 text-purple-300 border border-purple-800 px-2.5 py-1 rounded-full font-mono uppercase">Modül #3</span>
-          </div>
-
-          <div className="space-y-6">
-            <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* 👑 3. MOTOR: YÖNETİCİ KOKPİTİ (SADECE SÖZLEŞME SAHİBİNE GÖZÜKÜR!) */}
+        {isAdmin && (
+          <div className={`${activeTab === "admin" ? "block" : "hidden"} bg-slate-900 border border-purple-900/50 p-6 sm:p-8 rounded-3xl shadow-2xl relative overflow-hidden animate-fade-in`}>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl pointer-events-none"></div>
+            <div className="flex items-center justify-between mb-6 border-b border-slate-800 pb-4">
               <div>
-                <span className="text-[11px] text-gray-400 uppercase font-semibold block">Aktif Komisyon Oranı</span>
-                <span className="text-2xl font-mono font-black text-purple-400 mt-1 block">%{ (Number(feeBps) / 100).toFixed(2) } <span className="text-xs font-normal text-gray-500">({feeBps} BPS)</span></span>
+                <h3 className="text-xl font-bold text-white flex items-center gap-2"><span>🛠️</span> Yönetici Paneli & Ayar Vanası</h3>
+                <p className="text-xs text-purple-300 mt-0.5">Sözleşme Sahibi (Owner) Özel Kontrol Paneli</p>
               </div>
-              <div>
-                <span className="text-[11px] text-gray-400 uppercase font-semibold block">Maksimum Güvenlik Sınırı</span>
-                <span className="text-2xl font-mono font-black text-emerald-400 mt-1 block">%3.00 <span className="text-xs font-normal text-gray-500">(300 BPS)</span></span>
-              </div>
+              <span className="text-[10px] bg-purple-950 text-purple-300 border border-purple-800 px-2.5 py-1 rounded-full font-mono uppercase">Modül #3</span>
             </div>
 
-            <div className="border-t border-slate-800 pt-4">
-              <label htmlFor="newFeeInputBps" className="block text-xs font-bold text-purple-300 uppercase mb-2">⚡ YENİ KOMİSYON ORANI AYARLA (BPS CİNSİNDEN)</label>
-              <p className="text-[11px] text-gray-400 mb-3">
-                Not: 100 BPS = %1.00 komisyona denk gelir. Örneğin %0.75 yapmak için <b>75</b>, %1.50 yapmak için <b>150</b> yazınız. Müşteri koruma kilidi gereği 300 üzerine çıkılamaz.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <input
-                  id="newFeeInputBps"
-                  type="number"
-                  placeholder="Örn: 50 (%0.50 için)"
-                  value={newFeeInput}
-                  onChange={(e) => setNewFeeInput(e.target.value)}
-                  className="flex-1 p-3.5 bg-slate-950 border border-purple-900/60 rounded-xl font-mono text-sm text-white outline-none focus:border-purple-500 placeholder-gray-600"
-                />
-                <button
-                  onClick={handleUpdateFee}
-                  disabled={!account || isWrongNetwork}
-                  className={`py-3.5 px-6 rounded-xl font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2 ${
-                    !account ? "bg-gray-700 text-gray-500 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-700 shadow-purple-600/30 active:scale-95 cursor-pointer"
-                  }`}
-                >
-                  ⚙️ Oranı Güncelle (setFeeBps)
-                </button>
+            <div className="space-y-6">
+              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <span className="text-[11px] text-gray-400 uppercase font-semibold block">Aktif Komisyon Oranı</span>
+                  <span className="text-2xl font-mono font-black text-purple-400 mt-1 block">%{ (Number(feeBps) / 100).toFixed(2) } <span className="text-xs font-normal text-gray-500">({feeBps} BPS)</span></span>
+                </div>
+                <div>
+                  <span className="text-[11px] text-gray-400 uppercase font-semibold block">Maksimum Güvenlik Sınırı</span>
+                  <span className="text-2xl font-mono font-black text-emerald-400 mt-1 block">%3.00 <span className="text-xs font-normal text-gray-500">(300 BPS)</span></span>
+                </div>
               </div>
-            </div>
 
-            <div className="bg-purple-950/20 border border-purple-900/30 p-4 rounded-xl text-xs text-purple-200 space-y-1">
-              <div className="font-bold flex items-center gap-1.5 text-purple-300">
-                <span>ℹ️ Başmühendislik Notu:</span>
+              <div className="border-t border-slate-800 pt-4">
+                <label htmlFor="newFeeInputBps" className="block text-xs font-bold text-purple-300 uppercase mb-2">⚡ YENİ KOMİSYON ORANI AYARLA (BPS CİNSİNDEN)</label>
+                <p className="text-[11px] text-gray-400 mb-3">
+                  Not: 100 BPS = %1.00 komisyona denk gelir. Örneğin %0.75 yapmak için <b>75</b>, %1.50 yapmak için <b>150</b> yazınız. Müşteri koruma kilidi gereği 300 üzerine çıkılamaz.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    id="newFeeInputBps"
+                    type="number"
+                    placeholder="Örn: 50 (%0.50 için)"
+                    value={newFeeInput}
+                    onChange={(e) => setNewFeeInput(e.target.value)}
+                    className="flex-1 p-3.5 bg-slate-950 border border-purple-900/60 rounded-xl font-mono text-sm text-white outline-none focus:border-purple-500 placeholder-gray-600"
+                  />
+                  <button
+                    onClick={handleUpdateFee}
+                    disabled={!account || isWrongNetwork}
+                    className={`py-3.5 px-6 rounded-xl font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2 ${
+                      !account ? "bg-gray-700 text-gray-500 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-700 shadow-purple-600/30 active:scale-95 cursor-pointer"
+                    }`}
+                  >
+                    ⚙️ Oranı Güncelle (setFeeBps)
+                  </button>
+                </div>
               </div>
-              <p className="text-[11px] leading-relaxed text-gray-300">
-                Bu modül teknik raporunuzdaki <b>setFeeBps</b> akıllı sözleşme vanasını tetikler. Ticaret iptal edildiğinde (refund) sistem %0 komisyon keser, yalnızca başarıyla tamamlanan işlemlerden elde edilen pay doğrudan yönetici cüzdanınıza aktarılır.
-              </p>
+
+              <div className="bg-purple-950/20 border border-purple-900/30 p-4 rounded-xl text-xs text-purple-200 space-y-1">
+                <div className="font-bold flex items-center gap-1.5 text-purple-300">
+                  <span>ℹ️ Başmühendislik Notu:</span>
+                </div>
+                <p className="text-[11px] leading-relaxed text-gray-300">
+                  Bu modül teknik raporunuzdaki <b>setFeeBps</b> akıllı sözleşme vanasını tetikler. Ticaret iptal edildiğinde (refund) sistem %0 komisyon keser, yalnızca başarıyla tamamlanan işlemlerden elde edilen pay doğrudan yönetici cüzdanınıza aktarılır.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
       </div>
 
