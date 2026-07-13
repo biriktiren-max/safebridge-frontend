@@ -1,6 +1,13 @@
 "use client";
-import { useState } from "react";
+import React, { useState } from "react";
 import { ethers } from "ethers";
+
+// 🌐 VERCEL KALİTE KONTROL VİZESİ (TypeScript MetaMask İzni)
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
+}
 
 // 🛡️ SafeBridge Resmi Çalışma Ağı (Polygon Mainnet - Chain ID: 137 / 0x89)
 const TARGET_CHAIN_ID = "0x89"; 
@@ -10,44 +17,53 @@ const TARGET_NETWORK_NAME = "Polygon Mainnet";
 const CONTRACT_ADDRESS = "0x9e88A41c8888b5D65A0D23055e810594D024f227";
 
 // 👑 YÖNETİCİ (OWNER) YEDEK KONTROL ADRESİ
-// Buraya kendi cüzdan adresini yapıştırabilirsin usta (Sistem öncelikle kontratın gerçek sahibine bakar):
 const FALLBACK_ADMIN_ADDRESS = "0x68E0c0000000000000000000000000000001588D";
+
+// 📦 Escrow İşlem Veri Tipi Tanımı
+interface EscrowItem {
+  id: number;
+  seller: string;
+  amount: string;
+  desc: string;
+  password?: string;
+  state: string;
+}
 
 export default function HomePage() {
   // 📱 AKILLI SEKME (TAB) HAFIZASI
-  const [activeTab, setActiveTab] = useState("transfer");
+  const [activeTab, setActiveTab] = useState<string>("transfer");
 
   // ⚙️ GENEL CÜZDAN VE KASA SENSÖRLERİ
-  const [account, setAccount] = useState("");
-  const [balance, setBalance] = useState("0.0000");
-  const [vaultBalance, setVaultBalance] = useState("0.0000");
-  const [status, setStatus] = useState("");
-  const [isWrongNetwork, setIsWrongNetwork] = useState(false);
+  const [account, setAccount] = useState<string>("");
+  const [balance, setBalance] = useState<string>("0.0000");
+  const [vaultBalance, setVaultBalance] = useState<string>("0.0000");
+  const [status, setStatus] = useState<string>("");
+  const [isWrongNetwork, setIsWrongNetwork] = useState<boolean>(false);
 
   // 🔒 GÜVENLİK ZIRHI: Yönetici (Owner) Yetki Kilidi
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   // 🚀 1. MOTOR (TRANSFER) DEĞİŞKENLERİ
-  const [transferAddress, setTransferAddress] = useState("");
-  const [transferAmount, setTransferAmount] = useState("");
-  const [transferToken, setTransferToken] = useState("POL");
+  const [transferAddress, setTransferAddress] = useState<string>("");
+  const [transferAmount, setTransferAmount] = useState<string>("");
+  const [transferToken, setTransferToken] = useState<string>("POL");
 
   // 🤝 2. MOTOR (ESCROW TİCARET) DEĞİŞKENLERİ
-  const [escrowSeller, setEscrowSeller] = useState("");
-  const [escrowAmount, setEscrowAmount] = useState("");
-  const [escrowToken, setEscrowToken] = useState("POL");
-  const [escrowDesc, setEscrowDesc] = useState("");
-  const [escrowPassword, setEscrowPassword] = useState(""); 
-  const [activeEscrows, setActiveEscrows] = useState([
+  const [escrowSeller, setEscrowSeller] = useState<string>("");
+  const [escrowAmount, setEscrowAmount] = useState<string>("");
+  const [escrowToken, setEscrowToken] = useState<string>("POL");
+  const [escrowDesc, setEscrowDesc] = useState<string>("");
+  const [escrowPassword, setEscrowPassword] = useState<string>(""); 
+  const [activeEscrows, setActiveEscrows] = useState<EscrowItem[]>([
     { id: 101, seller: "0x71C...89A1", amount: "0.05 POL", desc: "Web Tasarım Hizmeti", password: "123", state: "🔒 Kasada Kilitli" }
   ]);
 
   // 🛠️ 3. MOTOR (YÖNETİCİ PANELİ) DEĞİŞKENLERİ
-  const [feeBps, setFeeBps] = useState("50");
-  const [newFeeInput, setNewFeeInput] = useState("");
+  const [feeBps, setFeeBps] = useState<string>("50");
+  const [newFeeInput, setNewFeeInput] = useState<string>("");
 
   // 🛡️ Ağ Kontrolü
-  const checkNetwork = async (provider) => {
+  const checkNetwork = async (provider: any): Promise<boolean> => {
     try {
       const network = await provider.getNetwork();
       if (network.chainId.toString() !== "137" && '0x' + network.chainId.toString(16) !== TARGET_CHAIN_ID) {
@@ -57,7 +73,7 @@ export default function HomePage() {
       }
       setIsWrongNetwork(false);
       return true;
-    } catch (err) { return false; }
+    } catch (err: any) { return false; }
   };
 
   // 🛡️ Doğru Ağa Geçiş
@@ -67,7 +83,7 @@ export default function HomePage() {
       await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: TARGET_CHAIN_ID }] });
       setIsWrongNetwork(false);
       setStatus("🟢 Doğru ağa geçildi! Güvenlik kilitleri aktif.");
-    } catch (err) { alert(`⚠️ Lütfen MetaMask üzerinden ${TARGET_NETWORK_NAME} ağını seçin.`); }
+    } catch (err: any) { alert(`⚠️ Lütfen MetaMask üzerinden ${TARGET_NETWORK_NAME} ağını seçin.`); }
   };
 
   // 🔒 Cüzdan Bağlama, Kasa Sensörü ve YÖNETİCİ YETKİ KONTROLÜ
@@ -82,19 +98,16 @@ export default function HomePage() {
       
       const isNetworkOk = await checkNetwork(provider);
       if (isNetworkOk) {
-        // Cüzdan Bakiyesini Oku
         const userBalance = await provider.getBalance(currentAccount);
         setBalance(ethers.formatEther(userBalance));
 
-        // Hazine Kasası Bakiyesini Oku
         try {
           const contractBal = await provider.getBalance(CONTRACT_ADDRESS);
           setVaultBalance(ethers.formatEther(contractBal));
-        } catch (e) {
+        } catch (e: any) {
           setVaultBalance("0.0000");
         }
 
-        // 👑 YÖNETİCİ GÜVENLİK KİLİDİ (Bağlanan cüzdan akıllı sözleşmenin sahibi mi?)
         try {
           const ownerAbi = ["function owner() view returns (address)"];
           const contract = new ethers.Contract(CONTRACT_ADDRESS, ownerAbi, provider);
@@ -108,7 +121,7 @@ export default function HomePage() {
             if (activeTab === "admin") setActiveTab("transfer");
             setStatus("🟢 Müşteri cüzdanı bağlandı. Güvenli ticaret modülleri hazır!");
           }
-        } catch (err) {
+        } catch (err: any) {
           if (currentAccount.toLowerCase() === FALLBACK_ADMIN_ADDRESS.toLowerCase()) {
             setIsAdmin(true);
             setStatus("👑 Yönetici cüzdanı bağlandı!");
@@ -119,7 +132,7 @@ export default function HomePage() {
           }
         }
       }
-    } catch (err) { setStatus("🔴 Cüzdan bağlantısı reddedildi."); }
+    } catch (err: any) { setStatus("🔴 Cüzdan bağlantısı reddedildi."); }
   };
 
   // 🚀 1. MODÜL: TRANSFER MOTORU
@@ -150,7 +163,7 @@ export default function HomePage() {
 
       setStatus(`✅ BAŞARILI! ${transferAmount} ${transferToken} transferi Polygon blokzincirinde kesinleşti!`);
       setTransferAmount(""); setTransferAddress("");
-    } catch (err) { 
+    } catch (err: any) { 
       if (err.code === "ACTION_REJECTED" || err.code === 4001) setStatus("❌ İşlem iptal edildi: MetaMask onayı reddedildi.");
       else setStatus(`❌ HATA: Transfer gerçekleştirilemedi.`);
     }
@@ -197,14 +210,14 @@ export default function HomePage() {
       
       const contractBal = await provider.getBalance(CONTRACT_ADDRESS);
       setVaultBalance(ethers.formatEther(contractBal));
-    } catch (err) { 
+    } catch (err: any) { 
       if (err.code === "ACTION_REJECTED" || err.code === 4001) setStatus("❌ İşlem iptal edildi: MetaMask onayı reddedildi.");
       else setStatus("❌ HATA: Escrow kasasına kilitleme başarısız oldu.");
     }
   };
 
   // 🟢 ESCROW KİLİDİ AÇMA
-  const handleRelease = (id, originalPassword) => {
+  const handleRelease = (id: number, originalPassword?: string) => {
     const inputPass = prompt("🔒 Lütfen bu işlemin kilidini açmak için Güvenlik Şifresini girin:");
     if (inputPass === originalPassword) {
       alert(`🎉 Şifre Doğru! İşlem #${id} Onaylandı! Fon serbest bırakıldı.`);
@@ -227,7 +240,7 @@ export default function HomePage() {
         setStatus(`✅ YÖNETİCİ ONAYI: Yeni komisyon oranı başarıyla %${(Number(newFeeInput) / 100).toFixed(2)} olarak ayarlandı!`);
         setNewFeeInput("");
       }, 1500);
-    } catch (err) {
+    } catch (err: any) {
       setStatus("❌ HATA: Komisyon oranı güncellenemedi.");
     }
   };
@@ -311,7 +324,6 @@ export default function HomePage() {
           🤝 Escrow Ticaret
         </button>
         
-        {/* 👑 GÜVENLİK KİLİDİ: Bu sekme SADECE Yönetici (Sözleşme Sahibi) bağlandığında ekranda görünür! */}
         {isAdmin && (
           <button
             onClick={() => setActiveTab("admin")}
@@ -359,7 +371,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* 🤝 2. MOTOR: ESCROW GÜVENCELİ TİCARET KOKPİTİ */}
+        {/* 🤝 2. MODÜL: ESCROW GÜVENCELİ TİCARET KOKPİTİ */}
         <div className={`${activeTab === "escrow" ? "block" : "hidden"} bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-3xl shadow-xl`}>
           <div className="flex items-center justify-between mb-6 border-b border-slate-800 pb-4">
             <div>
@@ -419,7 +431,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* 👑 3. MOTOR: YÖNETİCİ KOKPİTİ (SADECE SÖZLEŞME SAHİBİNE GÖZÜKÜR!) */}
+        {/* 👑 3. MOTOR: YÖNETİCİ KOKPİTİ */}
         {isAdmin && (
           <div className={`${activeTab === "admin" ? "block" : "hidden"} bg-slate-900 border border-purple-900/50 p-6 sm:p-8 rounded-3xl shadow-2xl relative overflow-hidden animate-fade-in`}>
             <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl pointer-events-none"></div>
