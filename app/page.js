@@ -30,7 +30,7 @@ export default function HomePage() {
 
   // ⚙️ GENEL CÜZDAN VE KASA SENSÖRLERİ
   const [account, setAccount] = useState("");
-  const [showEscrowPassword, setShowEscrowPassword] = useState(false);
+  
   const [balance, setBalance] = useState("0.0000");
   const [vaultBalance, setVaultBalance] = useState("0.0000");
   const [status, setStatus] = useState("");
