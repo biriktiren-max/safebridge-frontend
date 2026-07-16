@@ -10,7 +10,7 @@ const TARGET_NETWORK_NAME = "Polygon Mainnet";
 // 💰 HAZİNE KASASI & ESCROW KONTRAT BİLGİLERİ
 const CONTRACT_ADDRESS = "0x9e88A41c8888b5D65A0D23055e810594D024f227";
 
-// ⚙️ SAFE BRIDGE V4.0 YALIN AKILLI SÖZLEŞME ABI LİSTESİ (Yönetici yetkileri ve arka kapılar söküldü!)
+// ⚙️ SAFE BRIDGE V4.0 YALIN AKILLI SÖZLEŞME ABI LİSTESİ
 const CONTRACT_ABI = [
   "function createBridge(address _receiver, string _password, uint256 _hours) public payable",
   "function claimFunds(uint256 _id, string _password) public",
@@ -18,9 +18,111 @@ const CONTRACT_ABI = [
   "function bridgeCount() view returns (uint256)"
 ];
 
+// 🌐 ÇİFT DİLLİ SÖZLÜK PAKETİ (Türkçe & İngilizce)
+const LANGUAGES = {
+  tr: {
+    title: "SafeBridge Global 🦅",
+    subtitle: "%100 Merkeziyetsiz, Sahipsiz ve Güvenli Web3 Ticaret Köprüsü",
+    vaultTitle: "Merkeziyetsiz Hazine Havuzu",
+    vaultDesc: "Akıllı kontratta kilitli, sahipsiz toplam varlık",
+    connectBtn: "🔒 MetaMask Bağla & Kokpiti Aç",
+    wrongNetwork: "⚠️ YANLIŞ AĞ! Doğru Ağa Geçmek İçin Tıklayın",
+    correctNetwork: "🟢 %100 Güvenli ve Tamamen Otonom Web3 Motoru",
+    statusWrongNet: "⚠️ HATA: Yanlış Ağdasınız! Lütfen Polygon Mainnet ağını seçin.",
+    statusCorrectNet: "🟢 Doğru ağa geçildi! Güvenlik kilitleri aktif.",
+    statusConnecting: "⏳ Güvenli hat kuruluyor...",
+    statusConnected: "🟢 Cüzdan bağlandı. %100 Merkeziyetsiz güvenli ticaret modülleri hazır!",
+    tabTransfer: "🚀 Anlık Transfer",
+    tabEscrow: "🤝 Escrow Ticaret",
+    transferTitle: "🚀 Anlık Güvenli Transfer",
+    transferDesc: "3 Katmanlı Güvenlik Zırhlı Hızlı Gönderim",
+    transferTokenLabel: "Gönderilecek Varlık",
+    transferAddressLabel: "Alıcı Cüzdan Adresi",
+    transferAmountLabel: "Miktar",
+    transferBtn: "🚀 Güvenli Gönderimi Başlat",
+    escrowTitle: "🤝 Güvenli Ticaret (Escrow)",
+    escrowDesc: "Şifre Korumalı Akıllı Emanet Kasası",
+    escrowSellerLabel: "Satıcı Cüzdan Adresi",
+    escrowAmountLabel: "Miktar",
+    escrowTokenLabel: "Varlık",
+    escrowTradeDescLabel: "Ticaret Açıklaması",
+    escrowTradeDescPlaceholder: "Örn: Araç Kapora Bedeli / Yazılım İş Ücreti",
+    escrowPasswordLabel: "🔒 GÜVENLİK PAROLASI (KİLİT ŞİFRESİ)",
+    escrowPasswordPlaceholder: "Kilidi açacak gizli şifre belirleyin",
+    escrowBtn: "🤝 Kasaya Kilitle & Başlat",
+    escrowListTitle: "📜 Kilitli Kasadaki İşlemler",
+    escrowListEmpty: "📭 Şu an kasada kilitli ve bekleyen bir işlem bulunmuyor.",
+    releaseBtn: "🔑 Kilidi Aç",
+    footer: "SafeBridge v3.5.0 • %100 Trustless & Otonom • Hoşdere Disipliniyle Üretildi 🛠️",
+    alertMetaMask: "⚠️ MetaMask bulunamadı! Lütfen tarayıcınıza ekleyin.",
+    alertWrongAddress: "⛔ GÜVENLİK FRENİ: Alıcı cüzdan adresi geçersiz!",
+    alertWrongAmount: "⚠️ Lütfen geçerli bir miktar girin!",
+    alertWrongDesc: "⚠️ Lütfen ticaret açıklaması yazın!",
+    alertWrongPass: "🔒 GÜVENLİK FRENİ: Lütfen bir kilit şifresi belirleyin!",
+    alertReleasePrompt: "🔒 Lütfen bu işlemin kilidini açmak için Güvenlik Şifresini girin:"
+  },
+  en: {
+    title: "SafeBridge Global 🦅",
+    subtitle: "%100 Decentralized, Trustless & Secure Web3 Escrow Bridge",
+    vaultTitle: "Decentralized Treasury Vault",
+    vaultDesc: "Total contract locked and trustless assets",
+    connectBtn: "🔒 Connect MetaMask & Open Cockpit",
+    wrongNetwork: "⚠️ WRONG NETWORK! Click to Switch to Correct Network",
+    correctNetwork: "🟢 %100 Secure & Autonomous Web3 Engine Active",
+    statusWrongNet: "⚠️ ERROR: Wrong Network! Please switch to Polygon Mainnet.",
+    statusCorrectNet: "🟢 Correct network connected! Security locks active.",
+    statusConnecting: "⏳ Establishing secure connection...",
+    statusConnected: "🟢 Wallet connected. %100 Decentralized secure escrow modules ready!",
+    tabTransfer: "🚀 Instant Transfer",
+    tabEscrow: "🤝 Escrow Trade",
+    transferTitle: "🚀 Instant Secure Transfer",
+    transferDesc: "3-Layer Security Armored Fast Sending",
+    transferTokenLabel: "Asset to Send",
+    transferAddressLabel: "Receiver Wallet Address",
+    transferAmountLabel: "Amount",
+    transferBtn: "🚀 Initiate Secure Sending",
+    escrowTitle: "🤝 Secure Escrow Trade",
+    escrowDesc: "Password Protected Smart Escrow Vault",
+    escrowSellerLabel: "Seller Wallet Address",
+    escrowAmountLabel: "Amount",
+    escrowTokenLabel: "Asset",
+    escrowTradeDescLabel: "Trade Description",
+    escrowTradeDescPlaceholder: "e.g., Car Deposit Payment / Software Service Fee",
+    escrowPasswordLabel: "🔒 SECURITY PASSWORD (LOCK KEY)",
+    escrowPasswordPlaceholder: "Set a secret password to unlock the funds",
+    escrowBtn: "🤝 Lock into Vault & Start",
+    escrowListTitle: "📜 Locked Escrow Transactions",
+    escrowListEmpty: "📭 Currently no pending transactions locked in the vault.",
+    releaseBtn: "🔑 Unlock Funds",
+    footer: "SafeBridge v3.5.0 • %100 Trustless & Autonomous • Engineered with Precision 🛠️",
+    alertMetaMask: "⚠️ MetaMask not found! Please install the browser extension.",
+    alertWrongAddress: "⛔ SECURITY BRAKE: Invalid receiver wallet address!",
+    alertWrongAmount: "⚠️ Please enter a valid amount!",
+    alertWrongDesc: "⚠️ Please write a trade description!",
+    alertWrongPass: "🔒 SECURITY BRAKE: Please set a security password!",
+    alertReleasePrompt: "🔒 Please enter the Security Password to unlock this transaction:"
+  }
+};
+
 export default function HomePage() {
   // 📱 AKILLI SEKME (TAB) HAFIZASI
   const [activeTab, setActiveTab] = useState("transfer");
+
+  // 🌐 OTOMATİK DİL SENSÖRÜ (Varsayılan İngilizce, Türkçe ise Türkçe yapar)
+  const [lang, setLang] = useState("en");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const userLang = navigator.language || navigator.userLanguage;
+      if (userLang.startsWith("tr")) {
+        setLang("tr");
+      } else {
+        setLang("en");
+      }
+    }
+  }, []);
+
+  const t = LANGUAGES[lang]; // Aktif dil paketi
 
   // ⚙️ GENEL CÜZDAN VE KASA SENSÖRLERİ
   const [account, setAccount] = useState("");
@@ -43,7 +145,6 @@ export default function HomePage() {
   const [showEscrowPassword, setShowEscrowPassword] = useState(false); // 👁️ Göz İkonu Şalteri
   const [lockHours, setLockHours] = useState("24"); // Kilit Süresi (Saat)
   
-  // 🛡️ Sahte veriler temizlendi! Sadece gerçek blokzincir verileri listelenecek:
   const [activeEscrows, setActiveEscrows] = useState([]);
 
   // 🛡️ Ağ Kontrolü
@@ -52,7 +153,7 @@ export default function HomePage() {
       const network = await provider.getNetwork();
       if (network.chainId.toString() !== "137" && '0x' + network.chainId.toString(16) !== TARGET_CHAIN_ID) {
         setIsWrongNetwork(true);
-        setStatus(`⚠️ HATA: Yanlış Ağdasınız! Lütfen ${TARGET_NETWORK_NAME} ağını seçin.`);
+        setStatus(t.statusWrongNet);
         return false;
       }
       setIsWrongNetwork(false);
@@ -66,15 +167,15 @@ export default function HomePage() {
     try {
       await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: TARGET_CHAIN_ID }] });
       setIsWrongNetwork(false);
-      setStatus("🟢 Doğru ağa geçildi! Güvenlik kilitleri aktif.");
-    } catch (err) { alert(`⚠️ Lütfen MetaMask üzerinden ${TARGET_NETWORK_NAME} ağını seçin.`); }
+      setStatus(t.statusCorrectNet);
+    } catch (err) { alert(`⚠️ Please switch to ${TARGET_NETWORK_NAME} in MetaMask.`); }
   };
 
-  // 🔒 Cüzdan Bağlama ve Kasa Sensörü (Yönetici ayrıcalıkları tamamen kaldırıldı)
+  // 🔒 Cüzdan Bağlama ve Kasa Sensörü
   const connectWallet = async () => {
-    if (!window.ethereum) return alert("⚠️ MetaMask bulunamadı! Lütfen tarayıcınıza ekleyin.");
+    if (!window.ethereum) return alert(t.alertMetaMask);
     try {
-      setStatus("⏳ Güvenli hat kuruluyor...");
+      setStatus(t.statusConnecting);
       const provider = new ethers.BrowserProvider(window.ethereum);
       const accounts = await provider.send("eth_requestAccounts", []);
       const currentAccount = accounts[0];
@@ -91,26 +192,26 @@ export default function HomePage() {
         } catch (e) {
           setVaultBalance("0.0000");
         }
-        setStatus("🟢 Cüzdan bağlandı. %100 Merkeziyetsiz güvenli ticaret modülleri hazır!");
+        setStatus(t.statusConnected);
       }
-    } catch (err) { setStatus("🔴 Cüzdan bağlantısı reddedildi."); }
+    } catch (err) { setStatus("🔴 Connection rejected."); }
   };
 
   // 🚀 1. MODÜL: TRANSFER MOTORU
   const handleTransfer = async () => {
-    if (!account) return alert("🔒 Önce lütfen cüzdanınızı bağlayın!");
+    if (!account) return alert("🔒 Please connect your wallet first!");
     if (isWrongNetwork) { switchNetwork(); return; }
-    if (!transferAddress || !ethers.isAddress(transferAddress)) return alert("⛔ GÜVENLİK FRENİ: Alıcı cüzdan adresi geçersiz!");
-    if (!transferAmount || isNaN(Number(transferAmount)) || Number(transferAmount) <= 0) return alert("⚠️ Lütfen geçerli bir miktar girin!");
+    if (!transferAddress || !ethers.isAddress(transferAddress)) return alert(t.alertWrongAddress);
+    if (!transferAmount || isNaN(Number(transferAmount)) || Number(transferAmount) <= 0) return alert(t.alertWrongAmount);
 
     try {
-      setStatus(`⏳ [Gerçek Sinyal] MetaMask açılıyor... Lütfen ${transferAmount} ${transferToken} transferini onaylayın!`);
+      setStatus(`⏳ MetaMask opened... Confirm sending ${transferAmount} ${transferToken}!`);
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
 
       if (transferToken === "POL") {
         const tx = await signer.sendTransaction({ to: transferAddress, value: ethers.parseEther(transferAmount) });
-        setStatus(`⏳ POL Transferi ağa iletildi! Onay bekleniyor...`);
+        setStatus(`⏳ POL transaction broadcasted. Waiting confirmation...`);
         await tx.wait();
       } else {
         const TOKEN_ADDRESS = transferToken === "USDT" ? "0xc2132D05D31c914a87C6611C10748AEb04B58e8F" : "0x68749665FF8D2d112Fa859AA293F07A622782F38";
@@ -118,29 +219,29 @@ export default function HomePage() {
         const tokenContract = new ethers.Contract(TOKEN_ADDRESS, erc20Abi, signer);
         const decimals = transferToken === "USDT" ? 6 : 18;
         const tx = await tokenContract.transfer(transferAddress, ethers.parseUnits(transferAmount, decimals));
-        setStatus(`⏳ ${transferToken} Transferi ağa iletildi! Onay bekleniyor...`);
+        setStatus(`⏳ ${transferToken} transaction broadcasted. Waiting confirmation...`);
         await tx.wait();
       }
 
-      setStatus(`✅ BAŞARILI! ${transferAmount} ${transferToken} transferi Polygon blokzincirinde kesinleşti!`);
+      setStatus(`✅ SUCCESS! ${transferAmount} ${transferToken} transaction confirmed on Polygon blockchain!`);
       setTransferAmount(""); setTransferAddress("");
     } catch (err) { 
-      if (err.code === "ACTION_REJECTED" || err.code === 4001) setStatus("❌ İşlem iptal edildi: MetaMask onayı reddedildi.");
-      else setStatus(`❌ HATA: Transfer gerçekleştirilemedi.`);
+      if (err.code === "ACTION_REJECTED" || err.code === 4001) setStatus("❌ Action rejected on MetaMask.");
+      else setStatus(`❌ ERROR: Transfer failed.`);
     }
   };
 
   // 🤝 2. MODÜL: ESCROW KASASI
   const handleCreateEscrow = async () => {
-    if (!account) return alert("🔒 Önce lütfen cüzdanınızı bağlayın!");
+    if (!account) return alert("🔒 Please connect your wallet first!");
     if (isWrongNetwork) { switchNetwork(); return; }
-    if (!escrowSeller || !ethers.isAddress(escrowSeller)) return alert("⛔ GÜVENLİK FRENİ: Satıcı cüzdan adresi geçersiz!");
-    if (!escrowAmount || isNaN(Number(escrowAmount)) || Number(escrowAmount) <= 0) return alert("⚠️ Lütfen geçerli bir miktar girin!");
-    if (!escrowDesc) return alert("⚠️ Lütfen ticaret açıklaması yazın!");
-    if (!escrowPassword) return alert("🔒 GÜVENLİK FRENİ: Lütfen bir kilit şifresi belirleyin!");
+    if (!escrowSeller || !ethers.isAddress(escrowSeller)) return alert(t.alertWrongAddress);
+    if (!escrowAmount || isNaN(Number(escrowAmount)) || Number(escrowAmount) <= 0) return alert(t.alertWrongAmount);
+    if (!escrowDesc) return alert(t.alertWrongDesc);
+    if (!escrowPassword) return alert(t.alertWrongPass);
 
     try {
-      setStatus(`⏳ [Escrow Kasa] MetaMask açılıyor... Lütfen ${escrowAmount} ${escrowToken} kilitleme işlemini onaylayın!`);
+      setStatus(`⏳ MetaMask opened... Confirm ${escrowAmount} ${escrowToken} escrow lock!`);
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
 
@@ -150,7 +251,7 @@ export default function HomePage() {
           value: ethers.parseEther(escrowAmount),
           gasLimit: 500000 
         });
-        setStatus(`⏳ Escrow kilitleme işlemi ağa iletildi! Onay bekleniyor...`);
+        setStatus(`⏳ Escrow lock transaction broadcasted. Waiting confirmation...`);
         await tx.wait();
       } else {
         const TOKEN_ADDRESS = escrowToken === "USDT" ? "0xc2132D05D31c914a87C6611C10748AEb04B58e8F" : "0x68749665FF8D2d112Fa859AA293F07A622782F38";
@@ -158,32 +259,32 @@ export default function HomePage() {
         const tokenContract = new ethers.Contract(TOKEN_ADDRESS, erc20Abi, signer);
         const decimals = escrowToken === "USDT" ? 6 : 18;
         const tx = await tokenContract.transfer(CONTRACT_ADDRESS, ethers.parseUnits(escrowAmount, decimals));
-        setStatus(`⏳ Escrow fonu akıllı kasaya iletildi! Onay bekleniyor...`);
+        setStatus(`⏳ Escrow funds sent to smart vault. Waiting confirmation...`);
         await tx.wait();
       }
 
-      setStatus(`✅ BAŞARILI! ${escrowAmount} ${escrowToken} akıllı kasada kilitlendi.`);
+      setStatus(`✅ SUCCESS! ${escrowAmount} ${escrowToken} locked into smart vault.`);
       setActiveEscrows([...activeEscrows, {
         id: Math.floor(Math.random() * 900) + 100,
         seller: escrowSeller.slice(0, 6) + "..." + escrowSeller.slice(-4),
         amount: `${escrowAmount} ${escrowToken}`,
         desc: escrowDesc,
         password: escrowPassword,
-        state: "🔒 Kasada Kilitli"
+        state: "🔒 Locked in Vault"
       }]);
       setEscrowAmount(""); setEscrowSeller(""); setEscrowDesc(""); setEscrowPassword("");
       
       const contractBal = await provider.getBalance(CONTRACT_ADDRESS);
       setVaultBalance(ethers.formatEther(contractBal));
     } catch (err) { 
-      if (err.code === "ACTION_REJECTED" || err.code === 4001) setStatus("❌ İşlem iptal edildi: MetaMask onayı reddedildi.");
-      else setStatus("❌ HATA: Escrow kasasına kilitleme başarısız oldu.");
+      if (err.code === "ACTION_REJECTED" || err.code === 4001) setStatus("❌ Action rejected on MetaMask.");
+      else setStatus("❌ ERROR: Escrow lock failed.");
     }
   };
 
   // 🟢 ESCROW KİLİDİ AÇMA
   const handleRelease = async (id, originalPassword) => {
-    const inputPass = prompt("🔒 Lütfen bu işlemin kilidini açmak için Güvenlik Şifresini girin:");
+    const inputPass = prompt(t.alertReleasePrompt);
     if (inputPass === originalPassword) {
       try {
         if (!window.ethereum) return;
@@ -191,20 +292,20 @@ export default function HomePage() {
         const signer = await provider.getSigner();
         const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
-        setStatus(`⏳ İşlem #${id} için blokzincir kilidi açılıyor... Lütfen onaylayın.`);
+        setStatus(`⏳ Unlocking transaction #${id} on blockchain... Please confirm.`);
         try {
           const tx = await contract.claimFunds(id, inputPass);
           await tx.wait();
-        } catch(e) { console.log("Simülasyon kaydı onayı yapıldı."); }
+        } catch(e) { console.log("Simulation record unlocked."); }
 
-        alert(`🎉 Şifre Doğru! İşlem #${id} Onaylandı! Fon serbest bırakıldı.`);
+        alert(`🎉 Correct Password! Transaction #${id} Approved! Funds released.`);
         setActiveEscrows(activeEscrows.filter(item => item.id !== id));
-        setStatus("✅ Escrow kilidi açıldı ve fon transfer edildi.");
+        setStatus("✅ Escrow unlocked and funds transferred.");
       } catch (err) {
-        alert("❌ HATA: İşlem onaylanırken blokzincir hatası oluştu.");
+        alert("❌ ERROR: Failed to confirm transaction on blockchain.");
       }
     } else {
-      alert("❌ HATA: Yanlış şifre girdiniz! Güvenlik kilidi açılamadı.");
+      alert("❌ ERROR: Incorrect password! Security lock remained locked.");
     }
   };
 
@@ -214,10 +315,10 @@ export default function HomePage() {
       {/* Üst Logo ve Başlık */}
       <div className="text-center mb-8">
         <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 via-emerald-400 to-indigo-500 bg-clip-text text-transparent">
-          SafeBridge Global 🦅
+          {t.title}
         </h1>
         <p className="text-gray-400 mt-2 text-sm sm:text-base font-medium">
-          %100 Merkeziyetsiz, Sahipsiz ve Güvenli Web3 Ticaret Köprüsü
+          {t.subtitle}
         </p>
       </div>
 
@@ -226,24 +327,24 @@ export default function HomePage() {
         <div>
           <span className="text-xs font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-            Merkeziyetsiz Hazine Havuzu
+            {t.vaultTitle}
           </span>
           <h2 className="text-4xl sm:text-5xl font-mono font-black text-white mt-1 tracking-tight">
             {Number(vaultBalance).toFixed(4)} <span className="text-lg font-semibold text-gray-500">POL</span>
           </h2>
-          <span className="text-[11px] text-gray-400 mt-1 block">Akıllı kontratta kilitli, sahipsiz toplam varlık</span>
+          <span className="text-[11px] text-gray-400 mt-1 block">{t.vaultDesc}</span>
         </div>
 
         <div className="w-full lg:w-auto flex flex-col items-center lg:items-end gap-3">
           {!account ? (
             <button onClick={connectWallet} className="w-full lg:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-8 rounded-2xl transition-all shadow-lg shadow-blue-600/30 text-sm active:scale-95 cursor-pointer">
-              🔒 MetaMask Bağla & Kokpiti Aç
+              {t.connectBtn}
             </button>
           ) : (
             <div className="w-full lg:w-auto text-center lg:text-right">
               {isWrongNetwork ? (
                 <button onClick={switchNetwork} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-xl text-xs animate-pulse shadow-md mb-1 cursor-pointer">
-                  ⚠️ YANLIŞ AĞ! Doğru Ağa Geçmek İçin Tıklayın
+                  {t.wrongNetwork}
                 </button>
               ) : (
                 <div className="flex flex-wrap items-center justify-center lg:justify-end gap-2 text-xs font-mono mb-1">
@@ -252,7 +353,7 @@ export default function HomePage() {
                 </div>
               )}
               <span className="text-[11px] text-emerald-400 font-semibold flex items-center justify-center lg:justify-end gap-1">
-                🟢 %100 Güvenli ve Tamamen Otonom Web3 Motoru
+                {t.correctNetwork}
               </span>
             </div>
           )}
@@ -276,7 +377,7 @@ export default function HomePage() {
             activeTab === "transfer" ? "bg-blue-600 text-white shadow-md" : "text-gray-400 hover:text-white"
           }`}
         >
-          🚀 Anlık Transfer
+          {t.tabTransfer}
         </button>
         <button
           onClick={() => setActiveTab("escrow")}
@@ -284,7 +385,7 @@ export default function HomePage() {
             activeTab === "escrow" ? "bg-emerald-600 text-white shadow-md" : "text-gray-400 hover:text-white"
           }`}
         >
-          🤝 Escrow Ticaret
+          {t.tabEscrow}
         </button>
       </div>
 
@@ -295,14 +396,14 @@ export default function HomePage() {
         <div className={`${activeTab === "transfer" ? "block" : "hidden"} bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-3xl shadow-xl`}>
           <div className="flex items-center justify-between mb-6 border-b border-slate-800 pb-4">
             <div>
-              <h3 className="text-xl font-bold text-white flex items-center gap-2"><span>🚀</span> Anlık Güvenli Transfer</h3>
-              <p className="text-xs text-gray-400 mt-0.5">3 Katmanlı Güvenlik Zırhlı Hızlı Gönderim</p>
+              <h3 className="text-xl font-bold text-white flex items-center gap-2"><span>🚀</span> {t.transferTitle}</h3>
+              <p className="text-xs text-gray-400 mt-0.5">{t.transferDesc}</p>
             </div>
             <span className="text-[10px] bg-blue-950 text-blue-300 border border-blue-800 px-2.5 py-1 rounded-full font-mono uppercase">Modül #1</span>
           </div>
           <div className="space-y-4">
             <div>
-              <label htmlFor="transferTokenSelect" className="block text-xs font-bold text-gray-400 uppercase mb-1">Gönderilecek Varlık</label>
+              <label htmlFor="transferTokenSelect" className="block text-xs font-bold text-gray-400 uppercase mb-1">{t.transferTokenLabel}</label>
               <select id="transferTokenSelect" value={transferToken} onChange={(e) => setTransferToken(e.target.value)} className="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl font-semibold text-white outline-none focus:border-blue-500">
                 <option value="POL">🟣 POL (Polygon Ana Coin)</option>
                 <option value="USDT">💵 USDT (Tether Dolar)</option>
@@ -310,15 +411,15 @@ export default function HomePage() {
               </select>
             </div>
             <div>
-              <label htmlFor="transferAddressInput" className="block text-xs font-bold text-gray-400 uppercase mb-1">Alıcı Cüzdan Adresi</label>
+              <label htmlFor="transferAddressInput" className="block text-xs font-bold text-gray-400 uppercase mb-1">{t.transferAddressLabel}</label>
               <input id="transferAddressInput" type="text" placeholder="0x... (42 karakterli cüzdan adresi)" value={transferAddress} onChange={(e) => setTransferAddress(e.target.value)} className="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl font-mono text-sm text-blue-400 outline-none focus:border-blue-500" />
             </div>
             <div>
-              <label htmlFor="transferAmountInput" className="block text-xs font-bold text-gray-400 uppercase mb-1">Miktar</label>
+              <label htmlFor="transferAmountInput" className="block text-xs font-bold text-gray-400 uppercase mb-1">{t.transferAmountLabel}</label>
               <input id="transferAmountInput" type="number" placeholder="0.00" value={transferAmount} onChange={(e) => setTransferAmount(e.target.value)} className="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl font-semibold text-white outline-none focus:border-blue-500" />
             </div>
             <button onClick={handleTransfer} disabled={!account || isWrongNetwork} className={`w-full py-4 rounded-xl font-bold text-white shadow-lg transition-all mt-2 flex items-center justify-center gap-2 ${!account ? "bg-gray-700 text-gray-500 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 shadow-blue-600/30 active:scale-95 cursor-pointer"}`}>
-              {!account ? "🔒 Önce Cüzdan Bağlayın" : "🚀 Güvenli Gönderimi Başlat"}
+              {!account ? "🔒 Önce Cüzdan Bağlayın" : t.transferBtn}
             </button>
           </div>
         </div>
@@ -327,23 +428,23 @@ export default function HomePage() {
         <div className={`${activeTab === "escrow" ? "block" : "hidden"} bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-3xl shadow-xl`}>
           <div className="flex items-center justify-between mb-6 border-b border-slate-800 pb-4">
             <div>
-              <h3 className="text-xl font-bold text-white flex items-center gap-2"><span>🤝</span> Güvenli Ticaret (Escrow)</h3>
-              <p className="text-xs text-gray-400 mt-0.5">Şifre Korumalı Akıllı Emanet Kasası</p>
+              <h3 className="text-xl font-bold text-white flex items-center gap-2"><span>🤝</span> {t.escrowTitle}</h3>
+              <p className="text-xs text-gray-400 mt-0.5">{t.escrowDesc}</p>
             </div>
             <span className="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-2.5 py-1 rounded-full font-mono uppercase">Modül #2</span>
           </div>
           <div className="space-y-4">
             <div>
-              <label htmlFor="escrowSellerInput" className="block text-xs font-bold text-gray-400 uppercase mb-1">Satıcı Cüzdan Adresi</label>
+              <label htmlFor="escrowSellerInput" className="block text-xs font-bold text-gray-400 uppercase mb-1">{t.escrowSellerLabel}</label>
               <input id="escrowSellerInput" type="text" placeholder="0x... (Mal/Hizmeti Sağlayacak Kişi)" value={escrowSeller} onChange={(e) => setEscrowSeller(e.target.value)} className="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl font-mono text-sm text-emerald-400 outline-none focus:border-emerald-500" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="escrowAmountInput" className="block text-xs font-bold text-gray-400 uppercase mb-1">Miktar</label>
+                <label htmlFor="escrowAmountInput" className="block text-xs font-bold text-gray-400 uppercase mb-1">{t.escrowAmountLabel}</label>
                 <input id="escrowAmountInput" type="number" placeholder="0.00" value={escrowAmount} onChange={(e) => setEscrowAmount(e.target.value)} className="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl font-semibold text-white outline-none focus:border-emerald-500" />
               </div>
               <div>
-                <label htmlFor="escrowTokenSelect" className="block text-xs font-bold text-gray-400 uppercase mb-1">Varlık</label>
+                <label htmlFor="escrowTokenSelect" className="block text-xs font-bold text-gray-400 uppercase mb-1">{t.escrowTokenLabel}</label>
                 <select id="escrowTokenSelect" value={escrowToken} onChange={(e) => setEscrowToken(e.target.value)} className="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl font-semibold text-white outline-none focus:border-emerald-500">
                   <option value="POL">🟣 POL</option>
                   <option value="USDT">💵 USDT</option>
@@ -351,18 +452,18 @@ export default function HomePage() {
               </div>
             </div>
             <div>
-              <label htmlFor="escrowDescInput" className="block text-xs font-bold text-gray-400 uppercase mb-1">Ticaret Açıklaması</label>
-              <input id="escrowDescInput" type="text" placeholder="Örn: Araç Kapora Bedeli / Yazılım İş Ücreti" value={escrowDesc} onChange={(e) => setEscrowDesc(e.target.value)} className="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-gray-300 outline-none focus:border-emerald-500" />
+              <label htmlFor="escrowDescInput" className="block text-xs font-bold text-gray-400 uppercase mb-1">{t.escrowTradeDescLabel}</label>
+              <input id="escrowDescInput" type="text" placeholder={t.escrowTradeDescPlaceholder} value={escrowDesc} onChange={(e) => setEscrowDesc(e.target.value)} className="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-gray-300 outline-none focus:border-emerald-500" />
             </div>
             
             {/* 👁️ GÖZ İKONLU ŞİFRE KUTUSU */}
             <div>
-              <label htmlFor="escrowPasswordInput" className="block text-xs font-bold text-emerald-400 uppercase mb-1">🔒 GÜVENLİK PAROLASI (KİLİT ŞİFRESİ)</label>
+              <label htmlFor="escrowPasswordInput" className="block text-xs font-bold text-emerald-400 uppercase mb-1">{t.escrowPasswordLabel}</label>
               <div className="relative flex items-center w-full">
                 <input 
                   id="escrowPasswordInput" 
                   type={showEscrowPassword ? "text" : "password"} 
-                  placeholder="Kilidi açacak gizli şifre belirleyin" 
+                  placeholder={t.escrowPasswordPlaceholder} 
                   value={escrowPassword} 
                   onChange={(e) => setEscrowPassword(e.target.value)} 
                   className="w-full p-3.5 pr-12 bg-slate-950 border border-emerald-900 rounded-xl text-sm text-white outline-none focus:border-emerald-500 placeholder-emerald-800 transition-all" 
@@ -381,20 +482,19 @@ export default function HomePage() {
             </div>
 
             <button onClick={handleCreateEscrow} disabled={!account || isWrongNetwork} className={`w-full py-4 rounded-xl font-bold text-white shadow-lg transition-all mt-2 flex items-center justify-center gap-2 ${!account ? "bg-gray-700 text-gray-500 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30 active:scale-95 cursor-pointer"}`}>
-              {!account ? "🔒 Önce Cüzdan Bağlayın" : "🤝 Kasaya Kilitle & Başlat"}
+              {!account ? "🔒 Önce Cüzdan Bağlayın" : t.escrowBtn}
             </button>
           </div>
           
           <div className="mt-6 pt-4 border-t border-slate-800">
             <h4 className="text-xs font-bold text-gray-400 uppercase mb-2 flex items-center justify-between">
-              <span>📜 Kilitli Kasadaki İşlemler</span>
+              <span>{t.escrowListTitle}</span>
               <span className="text-emerald-400 font-mono">Top: {activeEscrows.length}</span>
             </h4>
             
-            {/* Boş Durum Bilgisi (Sahte veriler kaldırıldı) */}
             {activeEscrows.length === 0 ? (
               <div className="bg-slate-950/50 p-6 rounded-xl border border-slate-800/60 text-center text-gray-500 text-xs">
-                📭 Şu an kasada kilitli ve bekleyen bir işlem bulunmuyor.
+                {t.escrowListEmpty}
               </div>
             ) : (
               <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
@@ -405,7 +505,7 @@ export default function HomePage() {
                       <span className="text-[10px] text-gray-500 font-mono">{item.amount} • Satıcı: {item.seller}</span>
                     </div>
                     <button onClick={() => handleRelease(item.id, item.password)} className="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 font-bold px-2.5 py-1 rounded-lg text-[11px] transition-all cursor-pointer">
-                      🔑 Kilidi Aç
+                      {t.releaseBtn}
                     </button>
                   </div>
                 ))}
@@ -418,7 +518,7 @@ export default function HomePage() {
 
       {/* Alt Bilgi */}
       <div className="mt-16 text-gray-600 text-xs font-mono text-center">
-        SafeBridge v3.0.0 • %100 Trustless & Merkeziyetsiz • Hoşdere Disipliniyle Üretildi 🛠️
+        {t.footer}
       </div>
 
     </div>
